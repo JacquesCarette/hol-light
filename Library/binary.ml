@@ -2,6 +2,13 @@
 (* Binary expansions as a bijection between numbers and finite sets.         *)
 (* ========================================================================= *)
 
+let BINARY_INDUCT = prove
+ (`!P. P 0 /\ (!n. P n ==> P(2 * n) /\ P(2 * n + 1)) ==> !n. P n`,
+  GEN_TAC THEN STRIP_TAC THEN MATCH_MP_TAC num_WF THEN GEN_TAC THEN
+  STRIP_ASSUME_TAC(ARITH_RULE
+   `n = 0 \/ n DIV 2 < n /\ (n = 2 * n DIV 2 \/ n = 2 * n DIV 2 + 1)`) THEN
+  ASM_MESON_TAC[]);;
+
 let BOUNDED_FINITE = prove
  (`!s. (!x:num. x IN s ==> x <= n) ==> FINITE s`,
   REPEAT STRIP_TAC THEN MATCH_MP_TAC FINITE_SUBSET THEN EXISTS_TAC `0..n` THEN
@@ -55,7 +62,8 @@ let BITSET_STEP = prove
   REWRITE_TAC[ARITH; ODD_MULT; DIV_1; NOT_SUC; ODD_ADD] THEN
   GEN_TAC THEN DISCH_THEN(K ALL_TAC) THEN
   REWRITE_TAC[SUC_INJ; UNWIND_THM1; EXP] THEN
-  SIMP_TAC[GSYM DIV_DIV; MULT_EQ_0; EXP_EQ_0; ARITH] THEN
+  SIMP_TAC[CONV_RULE(RAND_CONV SYM_CONV) (SPEC_ALL DIV_DIV);
+           MULT_EQ_0; EXP_EQ_0; ARITH] THEN
   REWRITE_TAC[ARITH_RULE `(2 * n + 1) DIV 2 = n /\ (2 * n) DIV 2 = n`]);;
 
 let BINARYSUM_BITSET = prove
