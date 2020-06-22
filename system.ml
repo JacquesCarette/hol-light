@@ -47,20 +47,13 @@ set_jrh_lexer;;
 
 include Num;;
 
-let pp_print_num fmt n =
-  Format.pp_open_hbox fmt ();
-  Format.pp_print_string fmt (string_of_num n);
-  Format.pp_close_box fmt ();;
+let print_num n =
+  Format.open_hbox();
+  Format.print_string(string_of_num n);
+  Format.close_box();;
+
+#install_printer print_num;;
 
 
-
-
-
-
-
-
-
-let print_num = pp_print_num Format.std_formatter;;
-#install_printer pp_print_num;;
 (*This is the first file loaded, so the flag will be placed here, this controls whether or not debug functions will print to avoid increasing startup times by lots of prints*)
 let DBG_PRINT = ref false;;
