@@ -2726,12 +2726,6 @@ let cartesian_product = new_definition
  `cartesian_product k s =
         {f:K->A | EXTENSIONAL k f /\ !i. i IN k ==> f i IN s i}`;;
 
-let IN_CARTESIAN_PRODUCT = prove
- (`!k s (x:K->A).
-        x IN cartesian_product k s <=>
-        EXTENSIONAL k x /\ (!i. i IN k ==> x i IN s i)`,
-  REWRITE_TAC[cartesian_product; IN_ELIM_THM]);;
-
 let CARTESIAN_PRODUCT = prove
  (`!k s. cartesian_product k s =
          {f:K->A | !i. f i IN (if i IN k then s i else {ARB})}`,
@@ -2898,93 +2892,6 @@ let FORALL_CARTESIAN_PRODUCT_ELEMENTS_EQ = prove
         ==> ((!i x. i IN k /\ x IN s i ==> P i x) <=>
              !z i. z IN cartesian_product k s /\ i IN k ==> P i (z i))`,
   SIMP_TAC[FORALL_CARTESIAN_PRODUCT_ELEMENTS]);;
-
-(* ------------------------------------------------------------------------- *)
-(* Product of a family of maps.                                              *)
-(* ------------------------------------------------------------------------- *)
-
-let product_map = new_definition
- `product_map k (f:K->A->B) = \x. RESTRICTION k (\i. f i (x i))`;;
-
-let PRODUCT_MAP_RESTRICTION = prove
- (`!(f:K->A->B) k x.
-        product_map k f (RESTRICTION k x) = RESTRICTION k (\i. f i (x i))`,
-  SIMP_TAC[product_map; RESTRICTION; o_THM; FUN_EQ_THM]);;
-
-let IMAGE_PRODUCT_MAP = prove
- (`!(f:K->A->B) k s.
-        IMAGE (product_map k f) (cartesian_product k s) =
-        cartesian_product k (\i. IMAGE (f i) (s i))`,
-  REPEAT GEN_TAC THEN REWRITE_TAC[CARTESIAN_PRODUCT_AS_RESTRICTIONS] THEN
-  ONCE_REWRITE_TAC[SIMPLE_IMAGE_GEN] THEN
-  REWRITE_TAC[product_map; GSYM IMAGE_o; o_DEF] THEN
-  GEN_REWRITE_TAC I [EXTENSION] THEN X_GEN_TAC `g:K->B` THEN
-  REWRITE_TAC[IN_IMAGE; RESTRICTION; IN_ELIM_THM] THEN
-  EQ_TAC THEN STRIP_TAC THEN
-  ASM_REWRITE_TAC[RESTRICTION_EXTENSION] THEN
-  ASM SET_TAC[]);;
-
-(* ------------------------------------------------------------------------- *)
-(* Disjoint union construction for a family of sets.                         *)
-(* ------------------------------------------------------------------------- *)
-
-let disjoint_union = new_definition
- `disjoint_union (k:K->bool) (s:K->A->bool) = { (i,x) | i IN k /\ x IN s i}`;;
-
-let SUBSET_DISJOINT_UNION = prove
- (`!k (s:K->A->bool) t.
-        disjoint_union k s SUBSET disjoint_union k t <=>
-        !i. i IN k ==> s i SUBSET t i`,
-  REWRITE_TAC[SUBSET; disjoint_union; FORALL_IN_GSPEC] THEN
-  REWRITE_TAC[IN_ELIM_PAIR_THM] THEN SET_TAC[]);;
-
-let DISJOINT_UNION_EQ = prove
- (`!k (s:K->A->bool) t.
-        disjoint_union k s = disjoint_union k t <=>
-        !i. i IN k ==> s i = t i`,
-  REWRITE_TAC[GSYM SUBSET_ANTISYM_EQ; SUBSET_DISJOINT_UNION] THEN
-  SET_TAC[]);;
-
-let SUBSET_DISJOINT_UNION_EXISTS = prove
- (`!k (s:K->A->bool) u.
-        u SUBSET disjoint_union k s <=>
-        ?t. u = disjoint_union k t /\ !i. i IN k ==> t i SUBSET s i`,
-  REPEAT GEN_TAC THEN EQ_TAC THENL
-   [DISCH_TAC; MESON_TAC[SUBSET_DISJOINT_UNION]] THEN
-  EXISTS_TAC `\i. {x | (i,x) IN (u:K#A->bool)}` THEN
-  POP_ASSUM MP_TAC THEN REWRITE_TAC[SUBSET; EXTENSION] THEN
-  REWRITE_TAC[disjoint_union; FORALL_PAIR_THM; IN_ELIM_PAIR_THM] THEN
-  SET_TAC[]);;
-
-let INTER_DISJOINT_UNION = prove
- (`!k s t:K->A->bool.
-        (disjoint_union k s) INTER (disjoint_union k t) =
-        disjoint_union k (\i. s i INTER t i)`,
-  REPEAT GEN_TAC THEN
-  REWRITE_TAC[EXTENSION; disjoint_union; IN_INTER; IN_ELIM_THM] THEN
-  MESON_TAC[PAIR_EQ]);;
-
-let UNION_DISJOINT_UNION = prove
- (`!k s t:K->A->bool.
-        (disjoint_union k s) UNION (disjoint_union k t) =
-        disjoint_union k (\i. s i UNION t i)`,
-  REPEAT GEN_TAC THEN
-  REWRITE_TAC[EXTENSION; disjoint_union; IN_UNION; IN_ELIM_THM] THEN
-  MESON_TAC[PAIR_EQ]);;
-
-let DISJOINT_UNION_EQ_EMPTY = prove
- (`!k s:K->A->bool.
-        disjoint_union k s = {} <=> !i. i IN k ==> s i = {}`,
-  REWRITE_TAC[EXTENSION; FORALL_PAIR_THM; disjoint_union; IN_ELIM_PAIR_THM;
-              NOT_IN_EMPTY] THEN
-  SET_TAC[]);;
-
-let DISJOINT_DISJOINT_UNION = prove
- (`!k s t:K->A->bool.
-        DISJOINT (disjoint_union k s) (disjoint_union k t) =
-        !i. i IN k ==> DISJOINT (s i) (t i)`,
-  REPEAT GEN_TAC THEN
-  REWRITE_TAC[DISJOINT; INTER_DISJOINT_UNION; DISJOINT_UNION_EQ_EMPTY]);;
 
 (* ------------------------------------------------------------------------- *)
 (* Cardinality of functions with bounded domain (support) and range.         *)
@@ -3524,13 +3431,6 @@ let PAIRWISE_INSERT = prove
         (!y. y IN s /\ ~(y = x) ==> r x y /\ r y x) /\
         pairwise r s`,
   REWRITE_TAC[pairwise; IN_INSERT] THEN MESON_TAC[]);;
-
-let PAIRWISE_INSERT_SYMMETRIC = prove
- (`!r (x:A) s.
-        (!y. y IN s ==> (r x y <=> r y x))
-        ==> (pairwise r (x INSERT s) <=>
-             (!y. y IN s /\ ~(y = x) ==> r x y) /\ pairwise r s)`,
-  REWRITE_TAC[PAIRWISE_INSERT] THEN MESON_TAC[]);;
 
 let PAIRWISE_IMAGE = prove
  (`!r f. pairwise r (IMAGE f s) <=>

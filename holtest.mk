@@ -60,7 +60,6 @@ EXTENDED_EXAMPLES:=\
 	Arithmetic/make \
 	Boyer_Moore/make \
 	Complex/make \
-	Geometric_Algebra/make \
 	IEEE/make \
 	IsabelleLight/make \
 	Jordan/make \

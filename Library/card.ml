@@ -485,15 +485,9 @@ let CARD_LT_CARD = prove
   SIMP_TAC[CARD_LE_CARD; GSYM NOT_LE; GSYM CARD_NOT_LE]);;
 
 let CARD_HAS_SIZE_CONG = prove
- (`!(s:A->bool) (t:B->bool) n. s =_c t ==> (s HAS_SIZE n <=> t HAS_SIZE n)`,
+ (`!s:A->bool t:B->bool n. s HAS_SIZE n /\ s =_c t ==> t HAS_SIZE n`,
   REWRITE_TAC[HAS_SIZE] THEN
   MESON_TAC[CARD_EQ_CARD; CARD_FINITE_CONG]);;
-
-let NUMSEG_CARD_LE = prove
- (`!(s:A->bool). (1..n) <=_c s <=> (FINITE s ==> n <= CARD s)`,
-  GEN_TAC THEN ASM_CASES_TAC `FINITE(s:A->bool)` THEN
-  ASM_SIMP_TAC[CARD_LE_CARD; FINITE_NUMSEG; CARD_NUMSEG_1] THEN
-  ASM_SIMP_TAC[CARD_LE_FINITE_INFINITE; INFINITE; FINITE_NUMSEG]);;
 
 let CARD_LE_IMAGE = prove
  (`!f s. IMAGE f s <=_c s`,
@@ -1228,95 +1222,6 @@ let CARD_LT_ADD = prove
       TRANS_TAC CARD_LTE_TRANS `t':D->bool` THEN
       ASM_REWRITE_TAC[CARD_LE_ADDL]]]);;
 
-let CARD_LE_ADD_LCANCEL = prove
- (`!(s:A->bool) (t:B->bool) (u:C->bool).
-        (FINITE s \/ s <=_c u) /\
-        s +_c t <=_c s +_c u
-        ==> t <=_c u`,
-  REPEAT GEN_TAC THEN ASM_CASES_TAC `FINITE(u:C->bool)` THENL
-   [ASM_CASES_TAC `FINITE(s:A->bool)` THENL
-     [ALL_TAC; ASM_MESON_TAC[CARD_LE_FINITE]] THEN
-    DISCH_THEN(MP_TAC o CONJUNCT2) THEN
-    DISCH_THEN(fun th ->
-        MP_TAC th THEN MP_TAC(MATCH_MP(REWRITE_RULE[IMP_CONJ_ALT]
-                CARD_LE_FINITE) th)) THEN
-    ASM_SIMP_TAC[CARD_LE_CARD; CARD_ADD_FINITE_EQ; CARD_ADD_C] THEN
-    SIMP_TAC[LE_ADD_LCANCEL];
-    ALL_TAC] THEN
-  ASM_CASES_TAC `FINITE(t:B->bool)` THENL
-   [ASM_MESON_TAC[CARD_LE_FINITE_INFINITE; INFINITE]; ALL_TAC] THEN
-  ASM_CASES_TAC `(s:A->bool) <=_c (u:C->bool)` THENL
-   [ASM_REWRITE_TAC[]; ASM_MESON_TAC[CARD_LE_FINITE_INFINITE; INFINITE]] THEN
-  ASM_CASES_TAC `(s:A->bool) <=_c (t:B->bool)` THENL
-   [ALL_TAC; ASM_MESON_TAC[CARD_NOT_LE; CARD_LT_IMP_LE; CARD_LE_TRANS]] THEN
-  MATCH_MP_TAC EQ_IMP THEN MATCH_MP_TAC CARD_LE_CONG THEN
-  CONJ_TAC THEN MATCH_MP_TAC CARD_ADD_ABSORB_LEFT THEN
-  ASM_REWRITE_TAC[INFINITE]);;
-
-let CARD_LE_ADD_LCANCEL_EQ = prove
- (`!(s:A->bool) (t:B->bool) (u:C->bool).
-        (FINITE s \/ s <=_c u)
-        ==> (s +_c t <=_c s +_c u <=> t <=_c u)`,
-  REPEAT GEN_TAC THEN DISCH_TAC THEN EQ_TAC THEN
-  ASM_SIMP_TAC[CARD_LE_ADD; CARD_LE_REFL] THEN
-  MATCH_MP_TAC(REWRITE_RULE[IMP_CONJ] CARD_LE_ADD_LCANCEL) THEN
-  ASM_REWRITE_TAC[]);;
-
-let CARD_LE_ADD_RCANCEL = prove
- (`!(s:A->bool) (t:B->bool) (u:C->bool).
-        (FINITE u \/ u <=_c t) /\
-        s +_c u <=_c t +_c u
-        ==> s <=_c t`,
-  let lemma = prove
-   (`s +_c u <=_c t +_c u <=> u +_c s <=_c u +_c t`,
-    MATCH_MP_TAC CARD_LE_CONG THEN REWRITE_TAC[CARD_ADD_SYM]) in
-  ONCE_REWRITE_TAC[lemma] THEN REWRITE_TAC[CARD_LE_ADD_LCANCEL]);;
-
-let CARD_LE_ADD_RCANCEL_EQ = prove
- (`!(s:A->bool) (t:B->bool) (u:C->bool).
-        (FINITE u \/ u <=_c t)
-        ==> (s +_c u <=_c t +_c u <=> s <=_c t)`,
-  REPEAT GEN_TAC THEN DISCH_TAC THEN EQ_TAC THEN
-  ASM_SIMP_TAC[CARD_LE_ADD; CARD_LE_REFL] THEN
-  MATCH_MP_TAC(REWRITE_RULE[IMP_CONJ] CARD_LE_ADD_RCANCEL) THEN
-  ASM_REWRITE_TAC[]);;
-
-let CARD_EQ_ADD_LCANCEL = prove
- (`!(s:A->bool) (t:B->bool) (u:C->bool).
-        (FINITE s \/ s <=_c t /\ s <=_c u) /\
-        s +_c t =_c s +_c u
-        ==> t =_c u`,
-  REPEAT GEN_TAC THEN DISCH_THEN(CONJUNCTS_THEN2 ASSUME_TAC MP_TAC) THEN
-  REWRITE_TAC[GSYM CARD_LE_ANTISYM] THEN MATCH_MP_TAC MONO_AND THEN
-  CONJ_TAC THEN MATCH_MP_TAC(REWRITE_RULE[IMP_CONJ] CARD_LE_ADD_LCANCEL) THEN
-  ASM_MESON_TAC[]);;
-
-let CARD_EQ_ADD_LCANCEL_EQ = prove
- (`!(s:A->bool) (t:B->bool) (u:C->bool).
-        (FINITE s \/ s <=_c t /\ s <=_c u)
-        ==> (s +_c t =_c s +_c u <=> t =_c u)`,
-  REPEAT GEN_TAC THEN DISCH_TAC THEN
-  REWRITE_TAC[GSYM CARD_LE_ANTISYM] THEN BINOP_TAC THEN
-  MATCH_MP_TAC CARD_LE_ADD_LCANCEL_EQ THEN ASM_MESON_TAC[]);;
-
-let CARD_EQ_ADD_RCANCEL = prove
- (`!(s:A->bool) (t:B->bool) (u:C->bool).
-        (FINITE u \/ u <=_c s /\ u <=_c t) /\
-        s +_c u =_c t +_c u
-        ==> s =_c t`,
-  REPEAT GEN_TAC THEN DISCH_THEN(CONJUNCTS_THEN2 ASSUME_TAC MP_TAC) THEN
-  REWRITE_TAC[GSYM CARD_LE_ANTISYM] THEN MATCH_MP_TAC MONO_AND THEN
-  CONJ_TAC THEN MATCH_MP_TAC(REWRITE_RULE[IMP_CONJ] CARD_LE_ADD_RCANCEL) THEN
-  ASM_MESON_TAC[]);;
-
-let CARD_EQ_ADD_RCANCEL_EQ = prove
- (`!(s:A->bool) (t:B->bool) (u:C->bool).
-        (FINITE u \/ u <=_c s /\ u <=_c t)
-        ==> (s +_c u =_c t +_c u <=> s =_c t)`,
-  REPEAT GEN_TAC THEN DISCH_TAC THEN
-  REWRITE_TAC[GSYM CARD_LE_ANTISYM] THEN BINOP_TAC THEN
-  MATCH_MP_TAC CARD_LE_ADD_RCANCEL_EQ THEN ASM_MESON_TAC[]);;
-
 let CARD_LE_UNIONS2 = prove
  (`!u:((A->bool)->bool) k:B->bool l:C->bool.
      u <=_c k /\ (!s. s IN u ==> s <=_c l) ==> UNIONS u <=_c k *_c l`,
@@ -1616,10 +1521,6 @@ let COUNTABLE_DIFF_FINITE = prove
   MATCH_MP_TAC FINITE_INDUCT_STRONG THEN
   SIMP_TAC[DIFF_EMPTY; SET_RULE `s DIFF (x INSERT t) = (s DIFF t) DELETE x`;
            COUNTABLE_DELETE]);;
-
-let COUNTABLE_DIFF = prove
- (`!s t:A->bool. COUNTABLE s ==> COUNTABLE(s DIFF t)`,
-  MESON_TAC[COUNTABLE_SUBSET; SET_RULE `s DIFF t SUBSET s`]);;
 
 let COUNTABLE_CROSS = prove
  (`!s t. COUNTABLE s /\ COUNTABLE t ==> COUNTABLE(s CROSS t)`,

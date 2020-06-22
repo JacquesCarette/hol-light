@@ -35,6 +35,6 @@ a tactic proof:
 Generating simple logical lemmas as part of a large proof.
 
 \SEEALSO
-ASM_METIS_TAC, LEANCOP, MESON, METIS_TAC, NANOCOP.
+ASM_METIS_TAC, MESON, METIS_TAC.
 
 \ENDDOC
