@@ -11,7 +11,6 @@ STANDALONE_EXAMPLES:=\
 	Examples/cong \
 	Examples/cooper \
 	Examples/dickson \
-	Examples/digit_serial_methods \
 	Examples/division_algebras \
 	Examples/dlo \
 	Library/floor \
@@ -35,7 +34,6 @@ STANDALONE_EXAMPLES:=\
 	Examples/mizar \
 	Library/multiplicative \
 	Examples/multiwf \
-	Examples/padics \
 	Examples/pell \
 	Library/permutations \
 	Library/primitive \

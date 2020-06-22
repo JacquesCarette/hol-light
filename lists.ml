@@ -297,11 +297,6 @@ let LENGTH_REPLICATE = prove
  (`!n x. LENGTH(REPLICATE n x) = n`,
   INDUCT_TAC THEN ASM_REWRITE_TAC[LENGTH; REPLICATE]);;
 
-let MEM_REPLICATE = prove
- (`!n x y:A. MEM x (REPLICATE n y) <=> x = y /\ ~(n = 0)`,
-  INDUCT_TAC THEN ASM_REWRITE_TAC[MEM; REPLICATE; NOT_SUC] THEN
-  MESON_TAC[]);;
-
 let EX_MAP = prove
  (`!P f l. EX P (MAP f l) <=> EX (P o f) l`,
   GEN_TAC THEN GEN_TAC THEN
