@@ -1,7 +1,0 @@
-.DS_Store
-*.cmi
-*.cmo
-*.o
-*.cmx
-pa_j.ml
-update_database.ml
