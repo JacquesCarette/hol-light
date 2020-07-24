@@ -45,7 +45,7 @@ let combinatoryType = define
 combinatoryType (QuoConst str ty) = ty /\
 combinatoryType (Abs (QuoVar str ty) e2) = (TyBiCons "fun" ty (combinatoryType e2)) /\
 combinatoryType (QuoVar str ty) = ty /\
-combinatoryType (Quo e) = combinatoryType e`;;
+combinatoryType (Quo e) = TyBase "epsilon"`;;
 
 (*Mathematical definition of what constitutes a variable*)
 let isVar = define `isVar e = ((ep_constructor e) = "QuoVar")`;;
@@ -60,20 +60,11 @@ let isAbs = define `isAbs e = ((ep_constructor e) = "Abs")`;;
 let isApp = define `isApp e = ((ep_constructor e) = "App")`;;
 
 (*Checks if a given type is a function using a much cleaner method*)
-let isFunction = define `isFunction ty = (?a0 a1. ty = (TyBiCons "fun" a0 a1))`;; 
-
-(*Checks that the constant name is valid*)
-let isValidConstName = define `
-	isValidConstName name = EX (\x. x = name) ["isValidConstNameDev"; "eqTypes"; "quo"; "app"; "e_abs"; "isProperSubexpressionOf"; "isPartOf"; "isExprType"; "isConstType"; "isVarType"; "isExpr"; "typeMismatch"; "isValidConstName"; "isFunction"; "isApp"; "isAbs"; "isConst"; "isVar"; "combinatoryType"; "headFunc"; "stripFunc"; "ep_type"; "isFreeIn"; "ep_constructor"; "Quo"; "App"; "Abs"; "QuoConst"; "QuoVar"; "_dest_epsilon"; "_mk_epsilon"; "TyCons"; "TyBase"; "TyVar"; "_dest_type"; "_mk_type"; "superadmissible"; "tailadmissible"; "admissible"; "CASEWISE"; "PCROSS"; "vector"; "dest_auto_define_finite_type_4"; "mk_auto_define_finite_type_4"; "dest_auto_define_finite_type_3"; "mk_auto_define_finite_type_3"; "dest_auto_define_finite_type_2"; "mk_auto_define_finite_type_2"; "dest_finite_prod"; "mk_finite_prod"; "dest_finite_diff"; "mk_finite_diff"; "sndcart"; "fstcart"; "pastecart"; "dest_finite_sum"; "mk_finite_sum"; "lambda"; "$"; "dest_cart"; "mk_cart"; "dest_finite_image"; "finite_index"; "dimindex"; "polynomial_function"; "sum"; "nsum"; "iterate"; "support"; "monoidal"; "neutral"; ".."; "has_sup"; "has_inf"; "inf"; "sup"; "COUNTABLE"; ">_c"; ">=_c"; "=_c"; "<_c"; "<=_c"; "ARBITRARY"; "INTERSECTION_OF"; "UNION_OF"; "pairwise"; "list_of_set"; "set_of_list"; "cartesian_product"; "EXTENSIONAL"; "ARB"; "CROSS"; "HAS_SIZE"; "CARD"; "ITSET"; "FINREC"; "REST"; "CHOICE"; "BIJ"; "SURJ"; "INJ"; "IMAGE"; "INFINITE"; "FINITE"; "SING"; "DISJOINT"; "PSUBSET"; "SUBSET"; "DELETE"; "DIFF"; "INTERS"; "INTER"; "UNIONS"; "UNION"; "UNIV"; "INSERT"; "EMPTY"; "SETSPEC"; "GSPEC"; "IN"; "num_gcd"; "num_coprime"; "num_mod"; "num_divides"; "num_of_int"; "int_gcd"; "int_coprime"; "int_mod"; "int_divides"; "real_mod"; "=="; "rem"; "div"; "int_pow"; "int_min"; "int_max"; "int_sgn"; "int_abs"; "int_mul"; "int_sub"; "int_add"; "int_neg"; "int_of_num"; "int_gt"; "int_ge"; "int_lt"; "int_le"; "real_of_int"; "int_of_real"; "integer"; "DECIMAL"; "sqrt"; "real_sgn"; "real_min"; "real_max"; "real_div"; "real_pow"; "real_abs"; "real_gt"; "real_ge"; "real_lt"; "real_sub"; "real_inv"; "real_le"; "real_mul"; "real_add"; "real_neg"; "real_of_num"; "dest_real"; "mk_real"; "treal_eq"; "treal_inv"; "treal_le"; "treal_mul"; "treal_add"; "treal_neg"; "treal_of_num"; "hreal_inv"; "hreal_le"; "hreal_mul"; "hreal_add"; "hreal_of_num"; "dest_hreal"; "mk_hreal"; "nadd_inv"; "nadd_rinv"; "nadd_mul"; "nadd_add"; "nadd_le"; "nadd_of_num"; "nadd_eq"; "dest_nadd"; "mk_nadd"; "is_nadd"; "dist"; "ASCII"; "_19631"; "_dest_char"; "_mk_char"; "list_of_seq"; "PAIRWISE"; "ZIP"; "ITLIST2"; "ASSOC"; "FILTER"; "EL"; "MAP2"; "ALL2"; "MEM"; "ITLIST"; "EX"; "ALL"; "NULL"; "REPLICATE"; "BUTLAST"; "LAST"; "MAP"; "LENGTH"; "REVERSE"; "APPEND"; "TL"; "HD"; "ISO"; "CONS"; "NIL"; "_dest_list"; "_mk_list"; "SOME"; "NONE"; "_dest_option"; "_mk_option"; "OUTR"; "OUTL"; "INR"; "INL"; "_dest_sum"; "_mk_sum"; "FNIL"; "FCONS"; "CONSTR"; "BOTTOM"; "_dest_rec"; "_mk_rec"; "ZRECSPACE"; "ZBOT"; "ZCONSTR"; "INJP"; "INJF"; "INJA"; "INJN"; "NUMRIGHT"; "NUMLEFT"; "NUMSUM"; "NUMSND"; "NUMFST"; "NUMPAIR"; "MEASURE"; "WF"; "minimal"; "MOD"; "DIV"; "FACT"; "-"; "ODD"; "EVEN"; "MIN"; "MAX"; ">"; ">="; "<"; "<="; "EXP"; "*"; "+"; "PRE"; "BIT1"; "BIT0"; "NUMERAL"; "SUC"; "_0"; "dest_num"; "mk_num"; "NUM_REP"; "IND_0"; "IND_SUC"; "ONTO"; "ONE_ONE"; "PASSOC"; "UNCURRY"; "CURRY"; "SND"; "FST"; ","; "REP_prod"; "ABS_prod"; "mk_pair"; "_FUNCTION"; "_MATCH"; "_GUARDED_PATTERN"; "_UNGUARDED_PATTERN"; "_SEQPATTERN"; "GEQ"; "GABS"; "LET_END"; "LET"; "one"; "one_REP"; "one_ABS"; "I"; "o"; "COND"; "@"; "_FALSITY_"; "?!"; "~"; "F"; "\\/"; "?"; "!"; "==>"; "/\\"; "T"; "="]
-`;;
-
-(*Checks that a type is a valid type*)
-let isValidType = define `
-	(isValidType (TyVar str) = T) /\
-	(isValidType (TyBase str) = (EX (\x. x = str) ["epsilon";"type";"4";"3";"2";"int";"real";"hreal";"nadd";"char";"num";"ind";"1";"bool"])) /\
-	(isValidType (TyMonoCons str a) = ((isValidType a) /\ (EX (\x. x = str) ["finite_image";"list";"option";"recspace"]))) /\
-	(isValidType (TyBiCons str a b) = ((isValidType a) /\ (isValidType b) /\ (EX (\x. x = str) ["finite_prod";"finite_diff";"finite_sum";"cart";"sum";"prod";"fun"])))
-`;;
+let isFunction = define `
+  (isFunction (TyVar str) = F) /\
+  (isFunction (TyBase str) = F) /\
+  (isFunction (TyMonoCons str ty) = F) /\
+  (isFunction (TyBiCons str ty1 ty2) = (str = "fun"))`;; 
 
 (*This function will take a variable term, and another term of type epsilon, and return whether or not the types mismatch. If the term is not found, false is returned.
 i.e. true means that two variables of the same name but different types exist inside these terms*)
@@ -84,22 +75,12 @@ let typeMismatch = define `
 (typeMismatch (QuoVar name ty) (Abs e1 e2) = ((typeMismatch (QuoVar name ty) e1) \/ (typeMismatch (QuoVar name ty) e2))) /\
 (typeMismatch (QuoVar name ty) (Quo e) = (typeMismatch (QuoVar name ty) e))`;;
 
-(*
-(*Mathematical definition of what constitutes a correct expression*)
-(*Todo: Enforce a check to see that constants are valid*)
-Variable -> Always a valid expression
-Constant -> Always a valid expression (except for when name is invalid?)
-App -> Valid when left side is constant of type function and right side's type matches that function OR left side is app and right side's type aligns 
-       Also valid when this is an Abs, because beta reductions are function applications in HOL
-Abs -> Valid when variable types match (variable doesn't need to be in function, but if it is, the types must match)
-Quo -> Valid because this term represents syntax, even if that syntax is of a term that makes no sense
-*)
-
+(*Checks soley if the construction represents a *possible* well-typed term*)
 let isExpr = define 
 `
-	(isExpr (QuoVar str ty) = (isValidType ty)) /\
-	(isExpr (QuoConst str ty) = ((isValidConstName str) /\ (isValidType ty))) /\
-	(isExpr (App e1 e2) = (((isConst e1) \/ (isApp e1) \/ (isAbs e1)) /\ (((headFunc (combinatoryType e1))) = (((combinatoryType e2)))) /\ (isFunction (combinatoryType e1)) /\ (isValidType (combinatoryType e1)) /\ (isExpr e2) /\ (isExpr e1)))  /\
+	(isExpr (QuoVar str ty) = T) /\
+	(isExpr (QuoConst str ty) = T) /\
+	(isExpr (App e1 e2) = (((isConst e1) \/ (isApp e1) \/ (isAbs e1)) /\ (((headFunc (combinatoryType e1))) = (((combinatoryType e2)))) /\ (isFunction (combinatoryType e1)) /\ (isExpr e2) /\ (isExpr e1)))  /\
 	(isExpr (Abs e1 e2) = ((isVar e1) /\ ~(typeMismatch e1 e2) /\ (isExpr e2) /\ (isExpr e1))) /\ 
 	(isExpr (Quo e) = T) 
 `;;
@@ -111,7 +92,7 @@ let isVarType = define `isVarType e t = ((isVar e) /\ (t = (ep_type e)))`;;
 let isConstType = define `isConstType e t = ((isConst e) /\ (t = (ep_type e)))`;;
 
 (*Mathematical definition of isExprType*)
-let isExprType = define `isExprType e t = ((isExpr e) /\ (t = (combinatoryType e)))`;;
+let isExprType = define `isExprType e t = ((isExpr e) /\ (combinatoryType e = t))`;;
 
 (*This is a sub part of the "is proper subexpression of" definition - it checks if the given first term appears anywhere inside the second *)
 let isPartOf = define `
@@ -325,21 +306,20 @@ prove(`combinatoryType (Abs (QuoVar "x" (TyBase "num")) (App (App (QuoConst "+" 
 	REWRITE_TAC[stripFunc]
 );;
 
-(*The below are all tests for isExpr - it is a very important function so it will be extensively tested*)
+
+(*                                                                                                     *)
+(* Below are all tests for isExpr - it is a very important function so it will be extensively tested*)
+(*                                                                                                     *)
+
 
 (*Prove that a variable is an expression*)
 prove(`isExpr (QuoVar "x" (TyBase "bool"))`,
-	REWRITE_TAC[isExpr] THEN
-	REWRITE_TAC[isValidType] THEN
-	REWRITE_TAC[EX]
+	REWRITE_TAC[isExpr]
 );;
 
 (*Prove that a constant is an expression*)
 prove(`isExpr (QuoConst "T" (TyBase "bool"))`,
-	REWRITE_TAC[isExpr] THEN
-	REWRITE_TAC[isValidConstName] THEN
-	REWRITE_TAC[isValidType] THEN
-	REWRITE_TAC[EX]
+	REWRITE_TAC[isExpr]
 );;
 
 (*Prove that a simple function application is an expression*)
@@ -350,16 +330,12 @@ prove(`isExpr (App (QuoConst "+" (TyBiCons "fun" (TyBase "num") (TyBiCons "fun" 
 	REWRITE_TAC[headFunc] THEN
 	REWRITE_TAC[ep_type] THEN
 	REWRITE_TAC[isFunction] THEN
-	REWRITE_TAC[isValidConstName] THEN
-	REWRITE_TAC[isValidType] THEN
-	REWRITE_TAC[EX] THEN
 	EXISTS_TAC `TyBase "num"` THEN
 	EXISTS_TAC `TyBiCons "fun" (TyBase "num") (TyBase "num")` THEN
 	REFL_TAC
 );;
 
 (*Prove that recursed function applications are an expression*)
-(*The automated prove function does not seem to work with this use of STRIP_TAC - following this series of step DOES prove this, however, I'm not sure how to rewrite it to work non-interactively
 prove(`isExpr (App(App (QuoConst "+" (TyBiCons "fun" (TyBase "num") (TyBiCons "fun" (TyBase "num") (TyBase "num")))) (QuoConst "NUMERAL" (TyBase "num"))) (QuoVar "x" (TyBase "num")))`,
 	REWRITE_TAC[isExpr] THEN
 	REWRITE_TAC[isApp;ep_constructor] THEN
@@ -368,20 +344,12 @@ prove(`isExpr (App(App (QuoConst "+" (TyBiCons "fun" (TyBase "num") (TyBiCons "f
 	REWRITE_TAC[headFunc] THEN
 	REWRITE_TAC[ep_type] THEN
 	REWRITE_TAC[isFunction] THEN
-	REWRITE_TAC[isValidConstName] THEN
-	REWRITE_TAC[isValidType] THEN
-	REWRITE_TAC[EX] THEN
-	STRIP_TAC THEN
-	EXISTS_TAC `TyBase "num"` THEN
-	EXISTS_TAC `TyBase "num"` THEN
-	REFL_TAC THEN
 	REWRITE_TAC[isConst;ep_constructor] THEN
-	STRIP_TAC THEN
-    EXISTS_TAC `TyBase "num"` THEN
-	EXISTS_TAC `TyBiCons "fun" (TyBase "num") (TyBase "num")` THEN
-	REFL_TAC
-);;
-*)
+	CONJ_TAC THEN
+	EXISTS_TAC `TyBase "num"` THENL
+	[EXISTS_TAC `TyBase "num"` THEN REFL_TAC; 
+	EXISTS_TAC `TyBiCons "fun" (TyBase "num") (TyBase "num")` THEN REFL_TAC]);;
+
 
 (*Prove that a malformed application is not an expression*)
 prove(`isExpr(App (QuoVar "x" (TyBase "bool")) (QuoVar "y" (TyBase "bool"))) <=> F`,
@@ -405,9 +373,6 @@ prove(`isExpr (App (QuoConst "+" (TyBiCons "fun" (TyBase "num") (TyBiCons "fun" 
 	REWRITE_TAC[headFunc] THEN
 	REWRITE_TAC[ep_type] THEN
 	REWRITE_TAC[isFunction] THEN
-	REWRITE_TAC[isValidConstName] THEN
-	REWRITE_TAC[isValidType] THEN
-	REWRITE_TAC[EX] THEN
 	EXISTS_TAC `TyBase "num"` THEN
 	EXISTS_TAC `TyBiCons "fun" (TyBase "bool") (TyBase "num")` THEN
 	REFL_TAC
@@ -457,8 +422,6 @@ prove(`isExpr (Abs (QuoConst "3" (TyBase "num")) (QuoVar "x" (TyBase "num"))) <=
 prove(`isExpr (Abs (QuoVar "x" (TyBase "bool")) (QuoVar "y" (TyBase "bool")))`,
 	REWRITE_TAC[isExpr] THEN
 	REWRITE_TAC[isVar;ep_constructor] THEN
-	REWRITE_TAC[isValidType] THEN
-	REWRITE_TAC[EX] THEN
 	REWRITE_TAC[typeMismatch]
 );;
 
@@ -466,8 +429,6 @@ prove(`isExpr (Abs (QuoVar "x" (TyBase "bool")) (QuoVar "y" (TyBase "bool")))`,
 prove(`isExpr (Abs (QuoVar "x" (TyBase "bool")) (QuoVar "x" (TyBase "bool")))`,
 	REWRITE_TAC[isExpr] THEN
 	REWRITE_TAC[isVar;ep_constructor] THEN
-	REWRITE_TAC[isValidType] THEN
-	REWRITE_TAC[EX] THEN
 	REWRITE_TAC[typeMismatch]
 );;
 
@@ -495,7 +456,7 @@ prove(`isExpr (Abs (QuoVar "x" (TyBase "bool")) (App(App (QuoConst "+" (TyBiCons
 );;
 
 (*Abstracting over an application is valid when the types do match*)
-(*Same issue here - EXISTS_TAC is failing to pick up the existential quantifier but this is provable interactively through STRIP_TAC
+
 prove(`isExpr (Abs (QuoVar "x" (TyBase "num")) (App(App (QuoConst "+" (TyBiCons "fun" (TyBase "num") (TyBiCons "fun" (TyBase "num") (TyBase "num")))) (QuoConst "3" (TyBase "num"))) (QuoVar "x" (TyBase "num"))))`,
 	REWRITE_TAC[isExpr] THEN
 	REWRITE_TAC[isVar;ep_constructor] THEN
@@ -505,13 +466,13 @@ prove(`isExpr (Abs (QuoVar "x" (TyBase "num")) (App(App (QuoConst "+" (TyBiCons 
 	REWRITE_TAC[isApp;ep_constructor] THEN
 	REWRITE_TAC[headFunc] THEN
 	REWRITE_TAC[typeMismatch] THEN
-	REWRITE_TAC[isValidType] THEN
-	REWRITE_TAC[EX] THEN
-	EXISTS_TAC `TyBase "num"` THEN
-	EXISTS_TAC `TyBase "num"` THEN
-	REFL_TAC
+	REWRITE_TAC[isConst;ep_constructor] THEN
+	CONJ_TAC THEN
+	EXISTS_TAC `TyBase "num"` THENL
+	[EXISTS_TAC `TyBase "num"` THEN REFL_TAC; 
+	EXISTS_TAC `TyBiCons "fun" (TyBase "num") (TyBase "num")` THEN REFL_TAC]
 );;
-*)
+
 
 (*The following will test isExprType*)
 prove(`isExprType (App (QuoConst "+" (TyBiCons "fun" (TyBase "num") (TyBiCons "fun" (TyBase "bool") (TyBase "num")))) (QuoConst "NUMERAL" (TyBase "num"))) (TyBiCons "fun" (TyBase "bool") (TyBase "num"))`,
@@ -520,9 +481,6 @@ prove(`isExprType (App (QuoConst "+" (TyBiCons "fun" (TyBase "num") (TyBiCons "f
 	REWRITE_TAC[isConst;ep_constructor] THEN
 	REWRITE_TAC[combinatoryType] THEN
 	REWRITE_TAC[stripFunc] THEN
-	REWRITE_TAC[isValidConstName] THEN
-	REWRITE_TAC[isValidType] THEN
-	REWRITE_TAC[EX] THEN
 	REWRITE_TAC[headFunc] THEN
 	REWRITE_TAC[isFunction] THEN
 	EXISTS_TAC `TyBase "num"` THEN
@@ -546,9 +504,6 @@ prove(`isExprType (App (QuoConst "+" (TyBiCons "fun" (TyBase "num") (TyBiCons "f
 	REWRITE_TAC[isConst;ep_constructor] THEN
 	REWRITE_TAC[combinatoryType] THEN
 	REWRITE_TAC[stripFunc] THEN
-	REWRITE_TAC[isValidConstName] THEN
-	REWRITE_TAC[isValidType] THEN
-	REWRITE_TAC[EX] THEN
 	REWRITE_TAC[headFunc] THEN
 	REWRITE_TAC[isFunction] THEN
 	REWRITE_TAC[typeDistinct]
@@ -577,9 +532,7 @@ prove(`isProperSubexpressionOf (App (QuoVar "x" (TyBase "bool")) (QuoConst "y" (
 prove(`isProperSubexpressionOf (QuoVar "x" (TyBase "bool")) (App (QuoVar "x" (TyBase "bool")) (QuoConst "y" (TyBase "bool")))`,
 	REWRITE_TAC[isProperSubexpressionOf] THEN
 	REWRITE_TAC[isExpr] THEN
-	REWRITE_TAC[isPartOf] THEN
-	REWRITE_TAC[isValidType] THEN
-	REWRITE_TAC[EX]
+	REWRITE_TAC[isPartOf]
 );;
 
 (*Tests that isProperSubExpression works for large terms*)
@@ -589,9 +542,6 @@ prove(`isProperSubexpressionOf (App (QuoConst "+" (TyBiCons "fun" (TyBase "num")
 	REWRITE_TAC[isPartOf] THEN
 	REWRITE_TAC[isConst;ep_constructor] THEN
 	REWRITE_TAC[combinatoryType] THEN
-	REWRITE_TAC[isValidConstName] THEN
-	REWRITE_TAC[isValidType] THEN
-	REWRITE_TAC[EX] THEN
 	REWRITE_TAC[isFunction] THEN
 	REWRITE_TAC[headFunc] THEN
 	EXISTS_TAC `TyBase "num"` THEN
@@ -609,8 +559,6 @@ prove(`isExpr (Quo (Abs (QuoVar "x" (TyBase "num")) (App(App (QuoConst "+" (TyBi
 	REWRITE_TAC[isApp;ep_constructor] THEN
 	REWRITE_TAC[headFunc] THEN
 	REWRITE_TAC[typeMismatch] THEN
-	REWRITE_TAC[isValidType] THEN
-	REWRITE_TAC[EX] THEN
 	EXISTS_TAC `TyBase "num"` THEN
 	EXISTS_TAC `TyBase "num"` THEN
 	REFL_TAC
@@ -629,45 +577,27 @@ prove(`isExpr (Quo (Abs (QuoVar "x" (TyBase "bool")) (App(App (QuoConst "+" (TyB
 	REWRITE_TAC[STRING_EQ_CONV `"bool" = "num"`]
 );;
 
-prove(`isExprType (Quo ((App (QuoConst "+" (TyBiCons "fun" (TyBase "num") (TyBiCons "fun" (TyBase "bool") (TyBase "num")))) (QuoConst "NUMERAL" (TyBase "num"))))) (TyBiCons "fun" (TyBase "bool") (TyBase "num"))`,
+prove(`isExprType (Quo ((App (QuoConst "+" (TyBiCons "fun" (TyBase "num") (TyBiCons "fun" (TyBase "bool") (TyBase "num")))) (QuoConst "NUMERAL" (TyBase "num"))))) (TyBase "epsilon")`,
 	REWRITE_TAC[isExprType] THEN
 	REWRITE_TAC[isExpr] THEN
 	REWRITE_TAC[isConst;ep_constructor] THEN
-	REWRITE_TAC[combinatoryType] THEN
-	REWRITE_TAC[stripFunc] THEN
-	REWRITE_TAC[isValidConstName] THEN
-	REWRITE_TAC[isValidType] THEN
-	REWRITE_TAC[EX] THEN
-	REWRITE_TAC[headFunc] THEN
-	REWRITE_TAC[isFunction] THEN
-	EXISTS_TAC `TyBase "num"` THEN
-	EXISTS_TAC `TyBiCons "fun" (TyBase "bool") (TyBase "num")` THEN
-	REFL_TAC
-);;
+	REWRITE_TAC[combinatoryType]);;
 
-(*
-This is another proof that doesn't seem to work automatically - however - it does not seem possible to prove this theorem as true as it requires applying stripFunc to a base type, so it still seems to work.
-prove(`isExprType (Quo(App (QuoConst "2" (TyBase "num")) (QuoConst "3" (TyBase "num")))) (TyBiCons "fun" (TyBase "bool") (TyBase "num")) <=> F`,
+
+prove(`isExprType (Quo(App (QuoConst "_0" (TyBase "num")) (QuoConst "_0" (TyBase "num")))) (TyBiCons "fun" (TyBase "bool") (TyBase "num")) <=> F`,
 	REWRITE_TAC[isExprType] THEN
 	REWRITE_TAC[isExpr] THEN
 	REWRITE_TAC[combinatoryType] THEN
-	REWRITE_TAC[isFunction] THEN
-	REWRITE_TAC[typeDistinct]
-);;
-*)
+	REWRITE_TAC[typeDistinct]);;
+
 
 prove(`isExprType (Quo (App (QuoConst "+" (TyBiCons "fun" (TyBase "num") (TyBiCons "fun" (TyBase "bool") (TyBase "num")))) (QuoConst "NUMERAL" (TyBase "num")))) (TyBase "bool") <=> F`,
 	REWRITE_TAC[isExprType] THEN
 	REWRITE_TAC[isExpr] THEN
 	REWRITE_TAC[isConst;ep_constructor] THEN
 	REWRITE_TAC[combinatoryType] THEN
-	REWRITE_TAC[stripFunc] THEN
-	REWRITE_TAC[isValidConstName] THEN
-	REWRITE_TAC[isValidType] THEN
-	REWRITE_TAC[EX] THEN
-	REWRITE_TAC[headFunc] THEN
-	REWRITE_TAC[isFunction] THEN
-	REWRITE_TAC[typeDistinct]
+	REWRITE_TAC[typeInjective] THEN 
+	REWRITE_TAC[STRING_EQ_CONV `"epsilon" = "bool"`]
 );;
     
 prove(`isProperSubexpressionOf (QuoVar "x" (TyBase "bool")) (Quo (QuoVar "y" (TyBase "bool"))) <=> F`,
@@ -685,9 +615,6 @@ prove(`isProperSubexpressionOf (App (QuoConst "+" (TyBiCons "fun" (TyBase "num")
 	REWRITE_TAC[isPartOf] THEN
 	REWRITE_TAC[isConst;ep_constructor] THEN
 	REWRITE_TAC[combinatoryType] THEN
-	REWRITE_TAC[isValidConstName] THEN
-	REWRITE_TAC[isValidType] THEN
-	REWRITE_TAC[EX] THEN
 	REWRITE_TAC[isFunction] THEN
 	REWRITE_TAC[headFunc] THEN
 	EXISTS_TAC `TyBase "num"` THEN
@@ -741,38 +668,6 @@ prove(`eqTypes (TyBase "bool") (TyBase "bool")`,REWRITE_TAC[eqTypes]);;
 prove(`eqTypes (TyBase "bool") (TyVar "A") <=> F`,
 	REWRITE_TAC[eqTypes] THEN
 	REWRITE_TAC[typeDistinct]
-);;
-
-(*Tests to check that isValidType works correctly*)
-prove(`isValidType (TyVar "AnythingIsAVariable")`,
-REWRITE_TAC[isValidType]
-);;
-
-prove(`isValidType (TyBase "num")`,
-REWRITE_TAC[isValidType] THEN
-REWRITE_TAC[EX]
-);;
-
-prove(`isValidType (TyMonoCons "list" (TyBase "num"))`,
-REWRITE_TAC[isValidType] THEN
-REWRITE_TAC[EX]
-);;
-
-prove(`isValidType (TyBiCons "fun" (TyBase "num") (TyBiCons "fun" (TyBase "num") (TyBase "num")))`,
-REWRITE_TAC[isValidType] THEN
-REWRITE_TAC[EX]
-);;
-
-prove(`isValidType (TyBiCons "fun" (TyBase "num") (TyBiCons "BAD_TYPE" (TyBase "num") (TyBase "num"))) <=> F`,
-REWRITE_TAC[isValidType] THEN
-REWRITE_TAC[EX] THEN
-REWRITE_TAC[STRING_EQ_CONV `"finite_prod" = "BAD_TYPE"`] THEN
-REWRITE_TAC[STRING_EQ_CONV `"finite_diff" = "BAD_TYPE"`] THEN
-REWRITE_TAC[STRING_EQ_CONV `"finite_sum" = "BAD_TYPE"`] THEN
-REWRITE_TAC[STRING_EQ_CONV `"cart" = "BAD_TYPE"`] THEN
-REWRITE_TAC[STRING_EQ_CONV `"sum" = "BAD_TYPE"`] THEN
-REWRITE_TAC[STRING_EQ_CONV `"prod" = "BAD_TYPE"`] THEN
-REWRITE_TAC[STRING_EQ_CONV `"fun" = "BAD_TYPE"`]
 );;
 
 prove(`isConstruction ((e_abs (QuoVar "x" (TyBase "bool")) (App (App (QuoVar "x" (TyBase "bool")) (QuoConst "/\\" (TyBiCons "fun" (TyBase "bool") (TyBiCons "fun" (TyBase "bool") (TyBase "bool"))))) (QuoConst "F" (TyBase "bool")))))`,
