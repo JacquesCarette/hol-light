@@ -1,9 +1,5 @@
 needs "Constructions/epsilon.ml";;
 
-(*To make proofs easier, this function attempts to automatically match up string equalities, to do so,
-it generates a list of calls to STRING_EQ_CONV for all strings in the term which can then be used with
-REWRITE_TAC*)
-
 let rec STRING_FETCH tm = 
   let str_ty = mk_type("list",[mk_type ("char",[])]) in
     match tm with
@@ -17,7 +13,6 @@ let rec STRING_FETCH tm =
 
 (*This tactic uses the above function to automatically reduce strings*)
 let (STRING_FETCH_TAC: tactic) = fun (asm,gl) -> PURE_REWRITE_TAC (STRING_FETCH gl) (asm,gl);;
-
 
 let (QUOTE_TO_CONSTRUCTION_TAC: tactic) = fun (asm,gl) -> CONV_TAC(QUOTE_TO_CONSTRUCTION_CONV) (asm,gl);;  
 let (CONSTRUCTION_TO_QUOTE_TAC: tactic) = fun (asm,gl) -> CONV_TAC(CONSTRUCTION_TO_QUOTE_CONV) (asm,gl);; 
@@ -45,7 +40,7 @@ let IS_EXPR_TYPE_CONV tm =
            REWRITE_TAC[ep_constructor] THEN
            REWRITE_TAC[headFunc; isFunction;stripFunc] THEN
            REWRITE_TAC[typeInjective] THEN
-           STRING_FETCH_TAC THEN
+           STRING_FETCH_TAC THEN 
            ASM_REWRITE_TAC[])
 
 (* Tactic to prove isFreeIn theorems *)
@@ -56,8 +51,8 @@ let IS_FREE_IN_TAC =
 
 (* Tactic to prove isExprType theorems *)
 let IS_EXPR_TYPE_TAC = 
-  ASM_REWRITE_TAC[isExprType] THEN
-  ASM_REWRITE_TAC[isExpr; combinatoryType] THEN
+  REWRITE_TAC[isExprType] THEN
+  REWRITE_TAC[isExpr; combinatoryType] THEN
   REWRITE_TAC[isConst; isApp; isAbs;isVar] THEN 
   REWRITE_TAC[typeMismatch] THEN
   REWRITE_TAC[ep_constructor] THEN
@@ -167,7 +162,39 @@ let APP_DISQUO_CONV tm = match tm with
   | Eval(Comb(Comb(Const("App",_),t1),t2),_) -> app_disquo_thm t1 t2
   | _ -> failwith "Not applicable" 
 
-let APP_DISQUO_TAC = REPEAT(CONV_TAC(ONCE_DEPTH_CONV APP_DISQUO_CONV))
+
+(* Simplifies `eval App eps1 eps2` terms        *)
+(* to `eval eps1` `eval eps2` when either       *) 
+(* isExprType eps is trivial (ie. can be proven *)
+(* with IS_EXPR_TYPE_TAC) or is an assumption   *)
+
+let (APP_DISQUO_TAC:tactic) =
+  fun (asl,w) ->
+  let rec find_app tm = 
+    match tm with 
+      | Comb(Comb(Const("App",_),_),_) -> tm
+      | Comb(t1,t2) ->
+          (try find_app t1 with Failure _ -> 
+          try  find_app t2 with Failure _ -> 
+              failwith "Not applicable")
+      | Abs(v,b) -> find_app b
+      | Eval(e,_) -> find_app e 
+      | Quote(e) -> find_app e 
+      | Hole(e,_) -> find_app e  
+      | _ -> failwith "Not applicable"
+  in 
+  let tac tm = 
+    match tm with 
+      | Comb(Comb(Const("App",_),t1),t2) ->
+          (MP_TAC(APP_DISQUO t1 t2) THEN 
+          ASM_REWRITE_TAC[] THEN 
+          IS_EXPR_TYPE_TAC THEN 
+          REPEAT DISCH_TAC THEN 
+          ASM_REWRITE_TAC[]) 
+  in
+  (tac(find_app w)) (asl,w);;
+
+
 
 let eval_beta_red_thm var arg body beta = 
   prove(rand(concl(BETA_REDUCE_EVAL var arg body beta)), 
@@ -183,6 +210,4 @@ let EVAL_BETA_RED_CONV tm = match tm with
   | _ -> failwith "Not applicable"
 
 let EVAL_BETA_RED_TAC = REPEAT(CONV_TAC(ONCE_DEPTH_CONV EVAL_BETA_RED_CONV))
-
-
 

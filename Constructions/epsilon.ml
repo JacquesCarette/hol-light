@@ -59,6 +59,9 @@ let isAbs = define `isAbs e = ((ep_constructor e) = "Abs")`;;
 (*Mathematical definition of what constitutes an application*)
 let isApp = define `isApp e = ((ep_constructor e) = "App")`;;
 
+(*Mathematical definition of what constitutes a quotation*)
+let isQuo = define `isQuo e = ((ep_constructor e) = "Quo")`;;
+
 (*Checks if a given type is a function using a much cleaner method*)
 let isFunction = define `
   (isFunction (TyVar str) = F) /\

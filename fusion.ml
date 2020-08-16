@@ -82,11 +82,13 @@ module type Hol_kernel =
       val vfree_in : term -> term -> bool
       val type_vars_in_term : term -> hol_type list
       val variant : term list -> term -> term
+      val vars_in : term -> term list
       val vsubst : (term * term) list -> term -> term
       val inst : (hol_type * hol_type) list -> term -> term
       val rand: term -> term
       val rator: term -> term
       val dest_eq: term -> term * term
+      val tmp_mk_string: string list -> term
 
       val isQuoteSame: term -> term -> bool
       val QSUB_CONV : (term->thm) -> term -> ((term->thm) -> term -> thm) -> thm
@@ -575,6 +577,21 @@ let rec type_subst i ty =
     | _ -> failwith "variant: not a variable"
 
 (* ------------------------------------------------------------------------- *)
+(* To find all the variables (free or not) in a term.                        *)
+(* ------------------------------------------------------------------------- *)
+
+  let rec vars_in tm = 
+    match tm with
+      | Var(_) -> [tm] 
+      | Const(_) -> []
+      | Abs(v,bod) -> union [v] (vars_in bod)
+      | Comb(f,a) -> union (vars_in f) (vars_in a)
+      | Quote(e) -> vars_in e
+      | Hole(e,ty) -> vars_in e 
+      | Eval(e,ty) -> vars_in e
+
+
+(* ------------------------------------------------------------------------- *)
 (* Syntax operations for equations.                                          *)
 (* ------------------------------------------------------------------------- *)
 
@@ -632,7 +649,7 @@ let rec type_subst i ty =
                        | _ -> failwith "More than one substitution into an evaluation.")
       | Comb(s,t) -> let s' = vsubst ilist s and t' = vsubst ilist t in
                      if s' == s && t' == t then tm else Comb(s',t')
-      | Abs(v,s) -> let ilist' = filter (fun (t,x) -> x <> v) ilist in
+      | Abs(v,s) -> let ilist' = filter (fun (t,x) -> x <> v && x <> t) ilist in
                     if ilist' = [] then tm else
                     let s' = vsubst ilist' s in
                     if s' == s then tm else 
@@ -659,6 +676,7 @@ let rec type_subst i ty =
       if forall (function (t,Var(_,y)) -> Pervasives.compare (type_of t) y = 0 
                         | _ -> false) theta
       then vsubst theta else failwith "vsubst: Bad substitution list"
+
 
 (* ------------------------------------------------------------------------- *)
 (* Type instantiation primitive.                                             *)
@@ -1296,7 +1314,7 @@ let rec type_subst i ty =
         | _ -> failwith "ABS_DISQUO: Improper type argument."
 
 
- (* Input 2 proper epsilon terms along with a function hol_type *)
+ (* Input 2 proper epsilon terms *)
   let APP_DISQUO tm1 tm2 = 
     if (not (proper_e_term tm1)) or (not (proper_e_term tm2)) then failwith "APP_DISQUO: Invalid terms, they must either be quotations or proper constructions" 
     else 
