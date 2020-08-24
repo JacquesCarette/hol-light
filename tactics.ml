@@ -576,7 +576,7 @@ let (MATCH_MP_TAC :thm_tactic) =
                        let lant = fst(dest_imp(concl xth)) in
                        null_meta,[asl,lant],
                        fun i [th] -> MP (INSTANTIATE_ALL i xth) th
-                   with Failure _ -> failwith "MATCH_MP_TAC: No match";;
+                   with Failure a -> failwith ("MATCH_MP_TAC: No match, " ^ a);;
 
 let (TRANS_TAC:thm->term->tactic) =
   fun th ->

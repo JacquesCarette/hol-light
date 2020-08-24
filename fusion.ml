@@ -769,6 +769,7 @@ let rec type_subst i ty =
 
 (* ------------------------------------------------------------------------- *)
 (* Useful to have term union modulo alpha-conversion for assumption lists.   *)
+(* Note: an output of 2 indicates a NEI theorem must be proved for a term    *)
 (* ------------------------------------------------------------------------- *)
 
 
@@ -794,6 +795,8 @@ let rec type_subst i ty =
     | Quote(e1),Quote(e2) -> orda env e1 e2
     | Hole(e1,t1),Hole(e2,t2) when t1 = t2 -> orda env e1 e2
     | Eval(e1,t1),Eval(e2,t2) when t1 = t2 -> orda env e1 e2 
+    | Comb(Abs(_),Abs(v1,t1)),Abs(v2,t2) when (t1 = t2 && v1 = v2 && not (eval_free t1)) -> 2
+    | Abs(v1,t1),Comb(Abs(_),Abs(v2,t2)) when (t1 = t2 && v1 = v2 && not (eval_free t1)) -> 2
     | Const(_,_),_ -> -1
     | _,Const(_,_) -> 1
     | Var(_,_),_ -> -1
@@ -1015,9 +1018,9 @@ let rec type_subst i ty =
     | _ -> failwith "Cannot convert this number to a boolean value"
 
 (*Converts a char value to a combination of T's and F's representing the binary form of it's ASCII value (HOL stores it this way)*)
-
-  let rec charToHOL c depth = if depth < 8 then Comb((charToHOL (c / 2) (depth + 1)),(numToBool (c mod 2)))
-  else Comb(makeAscii,(numToBool (c mod 2)));;
+  let rec charToHOL c depth = 
+    if depth < 8 then Comb((charToHOL (c / 2) (depth + 1)),(numToBool (c mod 2)))
+    else Comb(makeAscii,(numToBool (c mod 2)));;
 
 (*Takes an exploded string and turns it into a HOL string*)
   let rec tmp_mk_string = function
@@ -1064,7 +1067,7 @@ let rec type_subst i ty =
   let rec construction_type tm = 
     let strip_func tm =
       match tm with 
-        | Comb(Comb(Comb(Const("TyBiCons",ty),tyName),ty1),ty2) -> ty2
+        | Comb(Comb(Comb(Const("TyBiCons",_),_),_),ty2) -> ty2
         | _ -> failwith "not a function type!"
     in
     match tm with 
@@ -1160,18 +1163,32 @@ let rec type_subst i ty =
     else Sequent([], safe_mk_eq tm conToTerm)
 
   let rec is_construction tm = 
+    let strip_func tm =
+      match tm with 
+        | Comb(Comb(Comb(Const("TyBiCons",_),_),ty1),_) -> ty1
+        | _ -> failwith "not a function type!"
+    in
+    let well_typed tm = 
+      match tm with 
+        | Comb(t1,t2) -> strip_func (construction_type t1) = construction_type t2
+        | _ -> true
+    in 
+    let is_quovar tm = 
+      match tm with 
+        | Comb(Comb(Const("QuoVar",_),_),_) -> true
+        | _ -> false 
+    in 
     match tm with 
       | Comb(Comb(Const("QuoVar",_),_),_) -> true
       | Comb(Comb(Const("QuoConst", _), _), _) -> true
-      | Comb(Const("Quo", ty), e) -> is_construction e
-      | Comb(Comb(Const("App", _), func), arg) -> is_construction func && is_construction arg
-      | Comb(Comb(Const("Abs", _), var), body) -> is_construction var && is_construction body 
-      | _ when type_of tm = ep_ty -> true 
+      | Comb(Const("Quo",_), e) -> is_construction e
+      | Comb(Comb(Const("App", _), func), arg) -> is_construction func && is_construction arg && well_typed tm
+      | Comb(Comb(Const("Abs", _), var), body) -> is_construction var && is_construction body && is_quovar var
       | _ -> failwith "Not a construction"
 
   let is_proper_construc c = can constructionToTerm c 
 
-  let proper_e_term tm = is_proper_construc tm || is_quote tm || is_construction tm
+  let proper_e_term tm = is_quote tm || is_construction tm
 
 (* ------------------------------------------------------------------------ *)
 (* Inference rule of quotation.                                             *)

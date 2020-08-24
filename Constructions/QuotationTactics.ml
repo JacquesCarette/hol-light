@@ -172,7 +172,7 @@ let (APP_DISQUO_TAC:tactic) =
   fun (asl,w) ->
   let rec find_app tm = 
     match tm with 
-      | Comb(Comb(Const("App",_),_),_) -> tm
+      | Eval(Comb(Comb(Const("App",_),_),_),_) -> tm
       | Comb(t1,t2) ->
           (try find_app t1 with Failure _ -> 
           try  find_app t2 with Failure _ -> 
@@ -185,7 +185,7 @@ let (APP_DISQUO_TAC:tactic) =
   in 
   let tac tm = 
     match tm with 
-      | Comb(Comb(Const("App",_),t1),t2) ->
+      | Eval(Comb(Comb(Const("App",_),t1),t2),_) ->
           (MP_TAC(APP_DISQUO t1 t2) THEN 
           ASM_REWRITE_TAC[] THEN 
           IS_EXPR_TYPE_TAC THEN 
@@ -208,6 +208,10 @@ let eval_beta_red_thm var arg body beta =
 let EVAL_BETA_RED_CONV tm = match tm with 
   | Comb(Abs(v,Eval(e,ty)),arg) ->  eval_beta_red_thm v arg e ty 
   | _ -> failwith "Not applicable"
+
+(* Simplifies `(\x. eval eps) B` terms                              *)
+(* to `eval ((\x. eps) B)` when the antecedants can be solved with  *) 
+(* IS_EXPR_TYPE_TAC and IS_FREE_IN_TAC                              *)
 
 let EVAL_BETA_RED_TAC = REPEAT(CONV_TAC(ONCE_DEPTH_CONV EVAL_BETA_RED_CONV))
 

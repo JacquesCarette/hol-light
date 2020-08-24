@@ -105,9 +105,9 @@ let DOUBLE_NAT_INDUCT_TAC thml =
   REWRITE_TAC thml;;
 
   
-(*                                                                *)
-(* Simple `nat` arithmetic lemmas translated to the epsilon type  *)
-(*                                                                *)
+(*                                                                      *)
+(* Simple `nat` arithmetic lemmas repeated using the term constructors  *)
+(*                                                                      *)
 
 let remove_one = prove(
   `!x:nat. add_unary One (thenZero x) = thenOne x`,
@@ -117,45 +117,6 @@ let remove_one = prove(
 let carry_one = prove(
   `!x:nat. add_unary One (thenOne x) = thenZero (add_unary One x)`,
   DOUBLE_NAT_INDUCT_TAC[take_s;add_unary;id_of_plus]
-  );;
-
-let ebin_sym_add = prove(
-  `!x:epsilon. !y:epsilon. proper_nat_construct x /\ proper_nat_construct y ==> 
-  add_ebin x y = add_ebin y x`,
-  MATCH_MP_TAC(lth) THEN 
-  REWRITE_TAC[proper_nat_construct;IMP_CONJ] THEN 
-  CONJ_TAC THEN
-  GEN_TAC THEN 
-  GEN_TAC THENL
-  [MATCH_MP_TAC(lth) THEN 
-  REWRITE_TAC[proper_nat_construct;IMP_CONJ] THEN 
-  CONJ_TAC THEN 
-  REPEAT GEN_TAC THEN
-  REPEAT DISCH_TAC THEN 
-  TOP_DISJ_CASES_TAC THEN
-  BOTTOM_DISJ_CASES_TAC THEN 
-  ASM_REWRITE_TAC[add_ebin] 
-  ;REPEAT DISCH_TAC THEN 
-  MATCH_MP_TAC(lth) THEN 
-  REWRITE_TAC[proper_nat_construct;IMP_CONJ] THEN 
-  CONJ_TAC THEN 
-  REPEAT GEN_TAC THEN 
-  REPEAT DISCH_TAC THENL
-  [BOTTOM_DISJ_CASES_TAC THEN 
-  ASM_REWRITE_TAC[add_ebin] THEN 
-  TOP_DISJ_CASES_TAC THEN 
-  ASM_REWRITE_TAC[add_ebin]
-  ;TOP_DISJ_CASES_TAC THEN 
-  BOTTOM_DISJ_CASES_TAC THEN 
-  ASM_REWRITE_TAC[add_ebin] THEN
-  MP_ASSUMPTION_TAC(SPEC `a1':epsilon` 
-  (ASSUME `!y. proper_nat_construct a1
-  ==> proper_nat_construct y
-  ==> add_ebin a1 y = add_ebin y a1`)) THEN 
-  DISCH_TAC THEN 
-  ASM_REWRITE_TAC[]
-  ] 
-  ]
   );;
 
 let take_out_S = prove(
@@ -261,6 +222,45 @@ let lemma1 = prove(
   REWRITE_TAC[IMP_CONJ] THEN 
   REPEAT DISCH_TAC THEN 
   ASM_REWRITE_TAC[]);; 
+
+let lemma2 = prove(
+  `!x:epsilon. !y:epsilon. proper_nat_construct x /\ proper_nat_construct y ==> 
+  add_ebin x y = add_ebin y x`,
+  MATCH_MP_TAC(lth) THEN 
+  REWRITE_TAC[proper_nat_construct;IMP_CONJ] THEN 
+  CONJ_TAC THEN
+  GEN_TAC THEN 
+  GEN_TAC THENL
+  [MATCH_MP_TAC(lth) THEN 
+  REWRITE_TAC[proper_nat_construct;IMP_CONJ] THEN 
+  CONJ_TAC THEN 
+  REPEAT GEN_TAC THEN
+  REPEAT DISCH_TAC THEN 
+  TOP_DISJ_CASES_TAC THEN
+  BOTTOM_DISJ_CASES_TAC THEN 
+  ASM_REWRITE_TAC[add_ebin] 
+  ;REPEAT DISCH_TAC THEN 
+  MATCH_MP_TAC(lth) THEN 
+  REWRITE_TAC[proper_nat_construct;IMP_CONJ] THEN 
+  CONJ_TAC THEN 
+  REPEAT GEN_TAC THEN 
+  REPEAT DISCH_TAC THENL
+  [BOTTOM_DISJ_CASES_TAC THEN 
+  ASM_REWRITE_TAC[add_ebin] THEN 
+  TOP_DISJ_CASES_TAC THEN 
+  ASM_REWRITE_TAC[add_ebin]
+  ;TOP_DISJ_CASES_TAC THEN 
+  BOTTOM_DISJ_CASES_TAC THEN 
+  ASM_REWRITE_TAC[add_ebin] THEN
+  MP_ASSUMPTION_TAC(SPEC `a1':epsilon` 
+  (ASSUME `!y. proper_nat_construct a1
+  ==> proper_nat_construct y
+  ==> add_ebin a1 y = add_ebin y a1`)) THEN 
+  DISCH_TAC THEN 
+  ASM_REWRITE_TAC[]
+  ] 
+  ]
+  );;
 
 let lemma3 = prove(
   `!x:epsilon. start_with_one x ==> 
@@ -559,6 +559,16 @@ let ne_to_inst var tm arg thm =
 (* Theorem templates: used for similar theorems *)
 (*                                              *)
 
+
+(* Creates the theorem:                                          *)
+(* proper_nat_construct tm1 /\ proper_nat_construct tm2          *)
+(*     ==> (\var. (eval (add_ebin tm1 tm2) to (nat))) arg =      *)
+(*         add_unary ((\var. (eval (tm1) to (nat))) arg)         *)
+(*         ((\var. (eval (tm2) to (nat))) arg) <=>               *)
+(*     proper_nat_construct tm1 /\ proper_nat_construct tm2      *)
+(*     ==> (eval (add_ebin tm1 tm2) to (nat)) =                  *)
+(*         add_unary (eval (tm1) to (nat)) (eval (tm2) to (nat)) *)
+
 let fin_beta_red tm1 tm2 var arg thm = 
   let tm = 
     mk_comb(mk_comb(`(=):bool->bool->bool`,
@@ -606,6 +616,16 @@ let fin_beta_red tm1 tm2 var arg thm =
   ASM_REWRITE_TAC[]
   );;
 
+
+(* Creates the theorem:                                        *)
+(* proper_nat_construct sub /\ proper_nat_construct tm2        *)
+(*     ==> (\tm1. (eval (add_ebin tm1 tm2) to (nat))) sub =    *)
+(*         add_unary ((\tm1. (eval (tm1) to (nat))) sub        *)
+(*         ((\tm1. (eval (tm2) to (nat))) sub <=>              *)
+(*     proper_nat_construct sub /\ proper_nat_construct tm2    *)
+(*     ==> (eval (add_ebin sub tm2) to (nat)) =                *)
+(*         add_unary (eval sub to (nat)) (eval (tm2) to (nat)) *)
+
 let sub_x tm1 tm2 sub =
   let add_1_2 = mk_comb(mk_comb(`add_ebin`, tm1),tm2) in 
   let add_sub = mk_comb(mk_comb(`add_ebin`, sub),tm2) in  
@@ -639,7 +659,7 @@ let sub_x tm1 tm2 sub =
   ASM_REWRITE_TAC[] THEN 
   DISCH_TAC THEN 
   PROPER_TYPE_TAC(sub) THEN 
-  PROPER_TYPE_TAC(tm2) THEN 
+  TRY (PROPER_TYPE_TAC(tm2)) THEN 
   PROPER_TYPE_TAC(add_sub) THEN 
   (PROPER_NOT_FREE_TAC sub `"x"` `TyBase "epsilon"`) THEN 
   (PROPER_NOT_FREE_TAC tm2 `"x"` `TyBase "epsilon"`) THEN 
@@ -648,6 +668,15 @@ let sub_x tm1 tm2 sub =
   NAT_BETA_EVAL_RED(mk_comb(mk_abs(tm1,mk_eval(tm2,`:nat`)),sub)) THEN 
   NAT_BETA_EVAL_RED(mk_comb(mk_abs(tm1,mk_eval(add_1_2,`:nat`)),sub)));;  
   
+
+(* Creates the theorem:                                        *)
+(* proper_nat_construct tm1 /\ proper_nat_construct sub        *)
+(*     ==> (\tm2. (eval (add_ebin tm1 tm2) to (nat))) sub =    *)
+(*         add_unary ((\tm2. (eval (tm1) to (nat))) sub        *)
+(*         ((\tm2. (eval (tm2) to (nat))) sub <=>              *)
+(*     proper_nat_construct tm1 /\ proper_nat_construct sub    *)
+(*     ==> (eval (add_ebin tm1 sub) to (nat)) =                *)
+(*         add_unary (eval tm1 to (nat)) (eval sub to (nat))   *)
 
 let sub_y tm1 tm2 sub =
   let add_1_2 = mk_comb(mk_comb(`add_ebin`, tm1),tm2) in 
@@ -682,7 +711,7 @@ let sub_y tm1 tm2 sub =
   ASM_REWRITE_TAC[] THEN 
   DISCH_TAC THEN 
   PROPER_TYPE_TAC(tm1) THEN 
-  PROPER_TYPE_TAC(sub) THEN 
+  TRY (PROPER_TYPE_TAC(sub)) THEN 
   PROPER_TYPE_TAC(add_sub) THEN 
   (PROPER_NOT_FREE_TAC tm1 `"y"` `TyBase "epsilon"`) THEN 
   (PROPER_NOT_FREE_TAC sub `"y"` `TyBase "epsilon"`) THEN 
@@ -690,7 +719,15 @@ let sub_y tm1 tm2 sub =
   NAT_BETA_EVAL_RED(mk_comb(mk_abs(tm2,mk_eval(tm1,`:nat`)),sub)) THEN 
   NAT_BETA_EVAL_RED(mk_comb(mk_abs(tm2,mk_eval(tm2,`:nat`)),sub)) THEN 
   NAT_BETA_EVAL_RED(mk_comb(mk_abs(tm2,mk_eval(add_1_2,`:nat`)),sub)));;  
-  
+
+(* Creates the theorem:                                                            *)
+(*   proper_nat_construct tm                                                       *)
+(*     ==> (\x. (eval (add_ebin (QuoConst "One" (TyBase "nat")) x) to (nat))) tm = *)
+(*         add_unary One ((\x. (eval (x) to (nat))) tm) <=>                        *)
+(*     proper_nat_construct tm                                                     *) 
+(*     ==> (eval (add_ebin (QuoConst "One" (TyBase "nat")) tm) to (nat)) =         *)
+(*         add_unary One (eval tm to (nat))                                        *)
+
 let sub_add_one tm = 
   let var = mk_var("x",`:epsilon`) in 
   let add_one_sub = mk_comb(mk_comb(`add_ebin`,`QuoConst "One" (TyBase "nat")`),var) in
@@ -728,6 +765,14 @@ let sub_add_one tm =
   NAT_BETA_EVAL_RED(mk_comb(mk_abs(var,mk_eval(add_one_sub,`:nat`)),tm)) THEN 
   NAT_BETA_EVAL_RED(mk_comb(mk_abs(var,mk_eval(var,`:nat`)),tm))
   );;
+
+
+(* Creates the theorem:                                                               *)
+(*     ==> (\var. (eval (add_ebin (QuoConst "One" (TyBase "nat")) x) to (nat))) sub = *)
+(*         add_unary One ((\x. (eval (x) to (nat))) sub) <=>                          *)
+(*     proper_nat_construct x                                                         *) 
+(*     ==> (eval (add_ebin (QuoConst "One" (TyBase "nat")) x) to (nat)) =             *)
+(*         add_unary One (eval x to (nat))                                            *)
 
 let no_sub_add_one var sub = 
   let x = mk_var("x",`:epsilon`) in 
@@ -1348,10 +1393,18 @@ let add_meaning =
 (* Required to instantiate theorem *)
 TRIV_NE (concl add_meaning);;
 
-(* To instantiate into the formula, input two terms of type nat *)
+(* To instantiate into the formula, input two terms of type nat or epsilon *)
 let ADD_EBIN_INST tm1 tm2 = 
-  let trm1 = termToConstruction tm1 in 
-  let trm2 = termToConstruction tm2 in 
+  let trm1 = 
+    match tm1 with 
+      | Quote(e) -> termToConstruction e
+      | _ -> if type_of tm1 = ep_ty then tm1 else termToConstruction tm1
+  in 
+  let trm2 = 
+    match tm2 with 
+      | Quote(e) -> termToConstruction e
+      | _ -> if type_of tm2 = ep_ty then tm2 else termToConstruction tm2
+  in 
   let prove_trm = rand(concl(sub_y trm1 `y:epsilon` trm2)) in 
   let fst_inst = mk_comb(`(!):(epsilon -> bool) -> bool`,
     mk_abs(`y:epsilon`,rand(concl(sub_x `x:epsilon` `y:epsilon` trm1)))) in 
@@ -1361,7 +1414,6 @@ let ADD_EBIN_INST tm1 tm2 =
     REWRITE_TAC[sub_x `x:epsilon` `y:epsilon` trm1]) in 
   prove(prove_trm,
     REWRITE_TAC[taut_lemma;IMP_CONJ] THEN 
-    TRY QUOTE_TO_CONSTRUCTION_TAC THEN 
     REPEAT DISCH_TAC THEN 
     MP_TAC(SPEC trm2 thm1) THEN 
     ASM_REWRITE_TAC[] THEN 

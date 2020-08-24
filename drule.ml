@@ -477,6 +477,8 @@ let PART_MATCH,GEN_PART_MATCH =
       if hyp fth <> hyp ath then failwith "PART_MATCH: instantiated hyps" else
       let tm' = partfn (concl fth) in
       if Pervasives.compare tm' tm = 0 then fth else
+      if alphaorder tm' tm = 2 then failwith "Must prove a NOT-EFFECTIVE-IN theorem"
+      else 
       try SUBS[ALPHA tm' tm] fth
       with Failure _ -> failwith "PART_MATCH: Sanity check failure"
   and GEN_PART_MATCH partfn th =

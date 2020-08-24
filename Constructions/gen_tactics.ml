@@ -26,7 +26,7 @@ let (BOTTOM_DISJ_CASES_TAC:tactic) =
 	  | Comb(_) as tm -> (DISJ_CASES_TAC(ASSUME tm)) (asl,w)
 	  | _ -> failwith "No cases found.";;
 
-(* Takes an implication theorem and removes all antecedants, as long as                *) 
+(* Takes an implication theorem and removes (i.e. proves) all antecedants, as long as  *) 
 (* they're in the assumption list, adding the conclusion to the antecedant of the goal *)
 let MP_ASSUMPTION_TAC thm = 
   let rec remove_ante thm = 
